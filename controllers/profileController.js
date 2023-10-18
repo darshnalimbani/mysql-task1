@@ -9,23 +9,39 @@ const AppError = require("../error/AppError");
 exports.addProfile = catchAsync(async(req,res,next) => {
     const {age, gender, std, UserId} = req.body;
     
-
     const user = await User.findOne({ where:{ id: UserId }});
-    const profile = await Profile.create({
-        age, gender, std, UserId: user.id
-    });
-    // user.profile=profile
-    // await user.save()
-
-    console.log("user",user)
-
-    if(profile)
-    {
-        res.status(201).json({ status : 'success', data : profile});
+    if (!user) {
+        next({ status: 404, message: "User not found" });
+        return;
     }
-    else
-        res.status(500).json({ status : 'error', message : 'Failed to create the profile'});
+    else{
+        const isProfile = await Profile.findOne({
+            
+            where:{
+                UserId: req.body.UserId
+            }
+          })
+        if(isProfile)
+        {
+            res.status(404).json({message: "User Profile already exist."});
+            return;
+        }
+        else{
+            const profile = await Profile.create({
+                age, gender, std, UserId: user.id
+            });
 
+            // console.log("user",user)
+
+            if(profile)
+            {
+                res.status(201).json({ status : 'success', data : profile});
+            }
+            else
+                res.status(500).json({ status : 'error', message : 'Failed to create the profile'});
+        }
+    }
+    
 });
 
 
